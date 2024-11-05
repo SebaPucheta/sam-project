@@ -2,7 +2,7 @@
 import BadRequestError from "../../src/commons/errors/bad-request";
 import { applyRequiredProperties, validate } from "../../src/commons/validation-utils"
 import { carSchema, joiCarSchema } from "../../src/infrastructure/handlers/schemas/post-car-body"
-// Change for trigger CI
+
 describe('Car schema validator', function () {
   it('Should be successful validate with mandatory properties', () => {
     const car = {
