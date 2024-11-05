@@ -53,6 +53,7 @@ jobs:
 
   deploy:
     runs-on: ubuntu-latest
+    environment: development
     needs: unit_test
     if: startsWith(github.ref, 'refs/heads/integration')
     steps:
@@ -65,7 +66,6 @@ jobs:
           node-version: '16'
 
       - name: Set up AWS credentials
-        environment: development
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
