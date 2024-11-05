@@ -1,0 +1,266 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: >-
+  sam-project
+Transform:
+- AWS::Serverless-2016-10-31
+
+Resources:
+
+  # DynamoDB table to store users
+  UsersTable:
+    Type: AWS::Serverless::SimpleTable
+    Properties:
+      TableName: Users
+      PrimaryKey:
+        Name: email
+        Type: String
+      ProvisionedThroughput:
+        ReadCapacityUnits: 1
+        WriteCapacityUnits: 1
+
+  # Secret
+  MySecret:
+    Type: AWS::SecretsManager::Secret
+    Properties:
+      Name: sam-project
+      Description: 'Secret for sam-project'
+      SecretString: !Sub |
+        {
+          "USERS_TABLE_NAME": "Users"
+        }
+  MyAuthorizerFunction:
+    Type: AWS::Serverless::Function
+    Properties: 
+      Handler: build/infrastructure/handlers/authorizer.handler
+      Runtime: nodejs20.x
+      CodeUri: ./
+      MemorySize: 128
+      Timeout: 100
+      Description: Lambda function that acts as an authorizer for API Gateway
+      Policies:
+        - AWSLambdaBasicExecutionRole
+        - Statement:
+          - Effect: Allow
+            Action:
+            - secretsmanager:GetSecretValue
+            Resource: !Ref MySecret
+      Environment:
+        Variables:
+          SECRET_NAME: !Ref MySecret
+          NODE_ENV: ""
+          AUTH_PRIVATE_KEY: ""
+
+  # API Gateway
+  MyApi:
+    Type: AWS::Serverless::Api
+    Properties:
+      StageName: Prod
+      Auth:
+        Authorizers:
+          MyCustomAuthorizer:
+            FunctionArn: !GetAtt MyAuthorizerFunction.Arn
+            Identity: 
+              Headers:
+                - Authorization
+              ReauthorizeEvery: 0
+            FunctionPayloadType: REQUEST
+            EnableSimpleResponses: true
+
+  # This is a Lambda function config associated with the source code: get-all-cars.js
+  getAllCarsFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: get-all-cars-function
+      Handler: build/infrastructure/handlers/get-all-cars.getAllCarsHandler
+      Runtime: nodejs20.x
+      CodeUri: ./
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get all cars from
+        the DB.
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+          - secretsmanager:GetSecretValue
+          Resource: !Ref MySecret
+      Environment:
+        Variables:
+          SECRET_NAME: !Ref MySecret
+          NODE_ENV: ""
+          MONGODB_CONNECTION_STRING: ""
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /cars
+            Method: GET
+            Auth:
+              Authorizer: MyCustomAuthorizer
+
+  # This is a Lambda function config associated with the source code: get-by-id.js
+  getCarByIdFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: get-car-by-id-function
+      Handler: build/infrastructure/handlers/get-car-by-id.getCarByIdHandler
+      Runtime: nodejs20.x
+      CodeUri: ./
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP get method to get one car by
+        id from the DB.
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+          - secretsmanager:GetSecretValue
+          Resource: !Ref MySecret
+      Environment:
+        Variables:
+          SECRET_NAME: !Ref MySecret
+          NODE_ENV: ""
+          MONGODB_CONNECTION_STRING: ""
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /cars/{id}
+            Method: GET
+            Auth:
+              Authorizer: MyCustomAuthorizer
+
+  # This is a Lambda function config associated with the source code: post-car.js
+  postCarFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: post-car-function
+      Handler: build/infrastructure/handlers/post-car.postCarHandler
+      Runtime: nodejs20.x
+      CodeUri: ./
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: A simple example includes a HTTP post method to add one car to the DB.
+      Policies:
+      - Statement:
+        - Effect: Allow
+          Action:
+          - secretsmanager:GetSecretValue
+          Resource: !Ref MySecret
+      Environment:
+        Variables:
+          SECRET_NAME: !Ref MySecret
+          NODE_ENV: ""
+          MONGODB_CONNECTION_STRING: ""
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /cars
+            Method: POST
+            Auth:
+              Authorizer: MyCustomAuthorizer
+  
+  # This is a Lambda function config associated with the source code: login.js
+  loginFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: login-function
+      Handler: build/infrastructure/handlers/login.loginHandler
+      Runtime: nodejs20.x
+      CodeUri: ./
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: It is a function that allow to login.
+      Policies:
+        # Give Create/Read/Update/Delete Permissions to the UsersTable
+      - DynamoDBCrudPolicy:
+          TableName: !Ref UsersTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - secretsmanager:GetSecretValue
+          Resource: !Ref MySecret
+      Environment:
+        Variables:
+          SECRET_NAME: !Ref MySecret
+          NODE_ENV: ""
+          USERS_TABLE_NAME: ""
+          AUTH_PRIVATE_KEY: ""
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /login
+            Method: POST
+  
+  # This is a Lambda function config associated with the source code: sign-up.js
+  signUpFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: sign-up-function
+      Handler: build/infrastructure/handlers/sign-up.signUpHandler
+      Runtime: nodejs20.x
+      CodeUri: ./
+      Architectures:
+      - x86_64
+      MemorySize: 128
+      Timeout: 100
+      Description: It is a function that allow to create a new user.
+      Policies:
+        # Give Create/Read/Update/Delete Permissions to the UsersTable
+      - DynamoDBCrudPolicy:
+          TableName: !Ref UsersTable
+      - Statement:
+        - Effect: Allow
+          Action:
+          - secretsmanager:GetSecretValue
+          Resource: !Ref MySecret
+      Environment:
+        Variables:
+          SECRET_NAME: !Ref MySecret
+          NODE_ENV: ""
+          USERS_TABLE_NAME: ""
+          AUTH_PRIVATE_KEY: ""
+          SALT_ROUNDS: ""
+      Events:
+        Api:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /sign-up
+            Method: POST
+
+  ApplicationResourceGroup:
+    Type: AWS::ResourceGroups::Group
+    Properties:
+      Name:
+        Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
+      ResourceQuery:
+        Type: CLOUDFORMATION_STACK_1_0
+  ApplicationInsightsMonitoring:
+    Type: AWS::ApplicationInsights::Application
+    Properties:
+      ResourceGroupName:
+        Ref: ApplicationResourceGroup
+      AutoConfigurationEnabled: 'true'
+
+Globals:
+  Function:
+    Tracing: Active
+    LoggingConfig:
+      LogFormat: JSON
+  Api:
+    TracingEnabled: true

@@ -1,0 +1,6 @@
+node_modules
+.aws-sam
+coverage
+locals.json
+# I can't add the build folder into here because sam ignore this build to create the sam build
+# build

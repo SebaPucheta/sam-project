@@ -1,0 +1,36 @@
+{
+  "name": "delete-test-01",
+  "description": "delete-test-01-description",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.398.0",
+    "@aws-sdk/client-secrets-manager": "^3.664.0",
+    "@aws-sdk/lib-dynamodb": "^3.398.0",
+    "@hapi/joi": "^17.1.1",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.7.0",
+    "uuid": "^10.0.0"
+  },
+  "devDependencies": {
+    "@golevelup/ts-jest": "^0.5.6",
+    "@types/bcryptjs": "^2.4.6",
+    "@types/hapi__joi": "^17.1.14",
+    "@types/jest": "^29.5.13",
+    "@types/jsonwebtoken": "^9.0.7",
+    "@types/node": "^22.7.4",
+    "@types/uuid": "^10.0.0",
+    "aws-sdk-client-mock": "^2.0.0",
+    "chai": "^5.1.1",
+    "jest": "^29.2.1",
+    "ts-jest": "^29.2.5",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2"
+  },
+  "scripts": {
+    "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
+    "build": "tsc",
+    "start:local:start-api": "npm run build && sam build && sam local start-api --env-vars locals.json"
+  }
+}
