@@ -9,17 +9,21 @@ jobs:
   install_dependencies:
     runs-on: ubuntu-latest
     steps:
+      # Allow you to have access to the code
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Install node
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '16'
 
+      # Install dependencies
       - name: Install dependencies
         run: npm install
 
+      # Save the node_modules files
       - name: Cache node_modules
         uses: actions/cache@v2
         with:
@@ -40,6 +44,7 @@ jobs:
         with:
           node-version: '16'
 
+      # Restore the node_modules files
       - name: Restore node_modules cache
         uses: actions/cache@v2
         with:
@@ -64,7 +69,7 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '16'
-
+      # Allow me to set my AWS credentials
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
