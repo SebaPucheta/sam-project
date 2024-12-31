@@ -4,4 +4,4 @@ export default interface Car {
   version: string;
   engine: string;
   licencePlate: string;
-}
+};

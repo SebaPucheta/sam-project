@@ -31,7 +31,7 @@ Resources:
   MyAuthorizerFunction:
     Type: AWS::Serverless::Function
     Properties: 
-      Handler: build/infrastructure/handlers/authorizer.handler
+      Handler: build/infrastructure/handlers/auth/authorizer.handler
       Runtime: nodejs20.x
       CodeUri: ./
       MemorySize: 128
@@ -66,21 +66,22 @@ Resources:
             FunctionPayloadType: REQUEST
             EnableSimpleResponses: true
 
-  # This is a Lambda function config associated with the source code: get-all-cars.js
-  getAllCarsFunction:
+  # This is a monolithic function
+  samProjectFunction:
     Type: AWS::Serverless::Function
     Properties:
-      FunctionName: get-all-cars-function
-      Handler: build/infrastructure/handlers/get-all-cars.getAllCarsHandler
+      FunctionName: sam-project-function
+      Handler: build/infrastructure/handlers/lambda-handler.handler
       Runtime: nodejs20.x
       CodeUri: ./
       Architectures:
       - x86_64
       MemorySize: 128
       Timeout: 100
-      Description: A simple example includes a HTTP get method to get all cars from
-        the DB.
+      Description: SAM project base.
       Policies:
+      - DynamoDBCrudPolicy:
+          TableName: !Ref UsersTable
       - Statement:
         - Effect: Allow
           Action:
@@ -90,9 +91,11 @@ Resources:
         Variables:
           SECRET_NAME: !Ref MySecret
           NODE_ENV: ""
+          USERS_TABLE_NAME: ""
           MONGODB_CONNECTION_STRING: ""
+          AUTH_PRIVATE_KEY: ""
       Events:
-        Api:
+        GetAllCars:
           Type: Api
           Properties:
             RestApiId: !Ref MyApi
@@ -100,34 +103,7 @@ Resources:
             Method: GET
             Auth:
               Authorizer: MyCustomAuthorizer
-
-  # This is a Lambda function config associated with the source code: get-by-id.js
-  getCarByIdFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: get-car-by-id-function
-      Handler: build/infrastructure/handlers/get-car-by-id.getCarByIdHandler
-      Runtime: nodejs20.x
-      CodeUri: ./
-      Architectures:
-      - x86_64
-      MemorySize: 128
-      Timeout: 100
-      Description: A simple example includes a HTTP get method to get one car by
-        id from the DB.
-      Policies:
-      - Statement:
-        - Effect: Allow
-          Action:
-          - secretsmanager:GetSecretValue
-          Resource: !Ref MySecret
-      Environment:
-        Variables:
-          SECRET_NAME: !Ref MySecret
-          NODE_ENV: ""
-          MONGODB_CONNECTION_STRING: ""
-      Events:
-        Api:
+        GetCarById:
           Type: Api
           Properties:
             RestApiId: !Ref MyApi
@@ -135,33 +111,7 @@ Resources:
             Method: GET
             Auth:
               Authorizer: MyCustomAuthorizer
-
-  # This is a Lambda function config associated with the source code: post-car.js
-  postCarFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: post-car-function
-      Handler: build/infrastructure/handlers/post-car.postCarHandler
-      Runtime: nodejs20.x
-      CodeUri: ./
-      Architectures:
-      - x86_64
-      MemorySize: 128
-      Timeout: 100
-      Description: A simple example includes a HTTP post method to add one car to the DB.
-      Policies:
-      - Statement:
-        - Effect: Allow
-          Action:
-          - secretsmanager:GetSecretValue
-          Resource: !Ref MySecret
-      Environment:
-        Variables:
-          SECRET_NAME: !Ref MySecret
-          NODE_ENV: ""
-          MONGODB_CONNECTION_STRING: ""
-      Events:
-        Api:
+        PostCars:
           Type: Api
           Properties:
             RestApiId: !Ref MyApi
@@ -169,79 +119,22 @@ Resources:
             Method: POST
             Auth:
               Authorizer: MyCustomAuthorizer
-  
-  # This is a Lambda function config associated with the source code: login.js
-  loginFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: login-function
-      Handler: build/infrastructure/handlers/login.loginHandler
-      Runtime: nodejs20.x
-      CodeUri: ./
-      Architectures:
-      - x86_64
-      MemorySize: 128
-      Timeout: 100
-      Description: It is a function that allow to login.
-      Policies:
-        # Give Create/Read/Update/Delete Permissions to the UsersTable
-      - DynamoDBCrudPolicy:
-          TableName: !Ref UsersTable
-      - Statement:
-        - Effect: Allow
-          Action:
-          - secretsmanager:GetSecretValue
-          Resource: !Ref MySecret
-      Environment:
-        Variables:
-          SECRET_NAME: !Ref MySecret
-          NODE_ENV: ""
-          USERS_TABLE_NAME: ""
-          AUTH_PRIVATE_KEY: ""
-      Events:
-        Api:
-          Type: Api
-          Properties:
-            RestApiId: !Ref MyApi
-            Path: /login
-            Method: POST
-  
-  # This is a Lambda function config associated with the source code: sign-up.js
-  signUpFunction:
-    Type: AWS::Serverless::Function
-    Properties:
-      FunctionName: sign-up-function
-      Handler: build/infrastructure/handlers/sign-up.signUpHandler
-      Runtime: nodejs20.x
-      CodeUri: ./
-      Architectures:
-      - x86_64
-      MemorySize: 128
-      Timeout: 100
-      Description: It is a function that allow to create a new user.
-      Policies:
-        # Give Create/Read/Update/Delete Permissions to the UsersTable
-      - DynamoDBCrudPolicy:
-          TableName: !Ref UsersTable
-      - Statement:
-        - Effect: Allow
-          Action:
-          - secretsmanager:GetSecretValue
-          Resource: !Ref MySecret
-      Environment:
-        Variables:
-          SECRET_NAME: !Ref MySecret
-          NODE_ENV: ""
-          USERS_TABLE_NAME: ""
-          AUTH_PRIVATE_KEY: ""
-          SALT_ROUNDS: ""
-      Events:
-        Api:
+        SignUp:
           Type: Api
           Properties:
             RestApiId: !Ref MyApi
             Path: /sign-up
             Method: POST
+            Auth:
+              Authorizer: NONE
+        Login:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /login
+            Method: POST
+            Auth:
+              Authorizer: NONE
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
@@ -250,12 +143,12 @@ Resources:
         Fn::Sub: ApplicationInsights-SAM-${AWS::StackName}
       ResourceQuery:
         Type: CLOUDFORMATION_STACK_1_0
-  ApplicationInsightsMonitoring:
-    Type: AWS::ApplicationInsights::Application
-    Properties:
-      ResourceGroupName:
-        Ref: ApplicationResourceGroup
-      AutoConfigurationEnabled: 'true'
+##ApplicationInsightsMonitoring:
+##  Type: AWS::ApplicationInsights::Application
+##  Properties:
+##    ResourceGroupName:
+##      Ref: ApplicationResourceGroup
+##    AutoConfigurationEnabled: 'true'
 
 Globals:
   Function:

@@ -18,7 +18,7 @@ export default class SecretGetter {
       );
   
       if (!secrets.SecretString) {
-        return null
+        return null;
       }
       return JSON.parse(secrets.SecretString)[secretKey];
     }

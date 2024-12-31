@@ -11,7 +11,7 @@ export default class LoginUseCase {
   ) {
   }
 
-  async excecute(params: LoginDto): Promise<{'access-token': string} | void> {
+  async excecute(params: LoginDto): Promise<{'access-token': string}> {
     const user = await this.userRepository.getUserByEmail(params.email);
 
     if (user && bcrypt.compareSync(params.password, user.hash)) {
