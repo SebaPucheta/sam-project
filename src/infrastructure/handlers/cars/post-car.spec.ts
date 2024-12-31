@@ -1,6 +1,6 @@
-import CarRepository from "../../application/ports/car-repository";
-import CreateCarUseCase from "../../application/use-cases/create-car";
-import Car from "../../domain/Car";
+import CarRepository from "../../../application/ports/car-repository";
+import CreateCarUseCase from "../../../application/use-cases/create-car";
+import Car from "../../../domain/Car";
 import { PostCarHandler } from "./post-car";
 import { createMock } from '@golevelup/ts-jest';
 
@@ -10,7 +10,7 @@ describe('PostCarHandler', function () {
 
   beforeAll(async () => {
     repository = createMock<CarRepository>();
-    const useCase = new CreateCarUseCase(repository)
+    const useCase = new CreateCarUseCase(repository);
     handler = new PostCarHandler(useCase);
   });
 

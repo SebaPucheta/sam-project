@@ -28,6 +28,6 @@ export default class UserRepositoryDynamoDB implements UserRepository {
       TableName : this.tableName,
       Item: user,
     };
-    const data = await this.docClient.send(new PutCommand(params));
+    await this.docClient.send(new PutCommand(params));
   }
 }

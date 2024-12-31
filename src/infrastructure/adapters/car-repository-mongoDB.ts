@@ -14,13 +14,12 @@ export default class CarRepositoryDynamoDB implements CarRepository {
   async init(stringConnection: string) {
     try {
       await connect(stringConnection);
-      console.log('exito')
     } catch (error) {
       console.log(error);
     }
   }
 
-  getAllCars(): Promise<Array<Car>> {
+  getAllCars(): Promise<Car[]> {
     return CarModel.find();
   }
 

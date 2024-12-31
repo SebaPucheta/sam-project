@@ -1,5 +1,5 @@
 import jwt from "jsonwebtoken";
-import SecretGetter from "../../commons/secret-getter";
+import SecretGetter from "../../../commons/secret-getter";
 
 export const handler = async (event: any) => {
   try {
@@ -7,8 +7,7 @@ export const handler = async (event: any) => {
     const privateKey = await secrets.getSecretValue('AUTH_PRIVATE_KEY');
     const token = event.headers.Authorization || event.authorizationToken;
     const decodedToken = await jwt.verify(token.replace('Bearer ', ''), privateKey);
-    console.log(decodedToken);
-    // Aquí deberías verificar el token (p. ej., JWT o algún token personalizado)
+
     if (decodedToken) {
       return {
         principalId: 'user|a1b2c3d4',
@@ -30,4 +29,4 @@ export const handler = async (event: any) => {
   } catch (err) {
     console.log(err);
   }
-}
+};
