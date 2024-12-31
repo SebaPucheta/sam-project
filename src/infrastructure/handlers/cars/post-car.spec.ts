@@ -27,6 +27,7 @@ describe('PostCarHandler', function () {
 
     expect(response).toStrictEqual({
       statusCode: 201,
+      body: JSON.stringify({})
     });
     expect(repository.createCars).toHaveBeenCalledTimes(1);
   });

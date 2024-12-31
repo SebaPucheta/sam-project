@@ -125,16 +125,12 @@ Resources:
             RestApiId: !Ref MyApi
             Path: /sign-up
             Method: POST
-            Auth:
-              Authorizer: NONE
         Login:
           Type: Api
           Properties:
             RestApiId: !Ref MyApi
             Path: /login
             Method: POST
-            Auth:
-              Authorizer: NONE
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group
