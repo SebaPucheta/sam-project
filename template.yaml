@@ -65,6 +65,10 @@ Resources:
               ReauthorizeEvery: 0
             FunctionPayloadType: REQUEST
             EnableSimpleResponses: true
+      Cors:
+        AllowMethods: "'GET,POST,PUT,PATCH,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization,Access-Control-Allow-Origin'"
+        AllowOrigin: "'*'"
 
   # This is a monolithic function
   samProjectFunction:
