@@ -1,0 +1,1 @@
+{"version":3,"file":"get-all-cars.js","sourceRoot":"","sources":["../../../src/application/use-cases/get-all-cars.ts"],"names":[],"mappings":";;AAGA,MAAqB,gBAAgB;IACnC,YAA6B,aAA4B;QAA5B,kBAAa,GAAb,aAAa,CAAe;IACzD,CAAC;IAED,QAAQ;QACN,OAAO,IAAI,CAAC,aAAa,CAAC,UAAU,EAAE,CAAC;IACzC,CAAC;CACF;AAPD,mCAOC"}

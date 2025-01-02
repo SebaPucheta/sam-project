@@ -17,6 +17,7 @@ export const validate = (payload: any, schema: any) => {
     Joi.assert(payload, schema);
     return payload;
   } catch (err: any) {
-    throw new BadRequestError(err.details.length > 0 ? err.details[0].message : '');
+    console.error(err);
+    throw new BadRequestError(err?.details?.length > 0 ? err.details[0].message : '');
   };
 };

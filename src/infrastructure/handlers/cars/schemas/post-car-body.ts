@@ -21,8 +21,8 @@ export const carSchema = {
     }),
   licencePlate: Joi.alternatives()
     .try(
-      Joi.string().regex(/^[a-z]{3}[0-9]{3}$/),
-      Joi.string().regex(/^[a-z]{2}[0-9]{3}[a-z]{2}$/ )
+      Joi.string().regex(/^[a-z]{3}[0-9]{3}$/i),
+      Joi.string().regex(/^[a-z]{2}[0-9]{3}[a-z]{2}$/i)
     )
     .messages({
       'alternatives.base': 'Licence plate hasnt the correct format',
@@ -30,5 +30,3 @@ export const carSchema = {
       'any.required': 'Licence plate is a required field'
     }),
 };
-
-export const joiCarSchema = Joi.object(carSchema);

@@ -123,6 +123,22 @@ Resources:
             Method: POST
             Auth:
               Authorizer: MyCustomAuthorizer
+        UpdateCar:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /cars/{id}
+            Method: PUT
+            Auth:
+              Authorizer: MyCustomAuthorizer
+        DeleteCar:
+          Type: Api
+          Properties:
+            RestApiId: !Ref MyApi
+            Path: /cars/{id}
+            Method: DELETE
+            Auth:
+              Authorizer: MyCustomAuthorizer
         SignUp:
           Type: Api
           Properties:
