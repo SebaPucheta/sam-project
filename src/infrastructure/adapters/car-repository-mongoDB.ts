@@ -3,6 +3,7 @@ import CarRepository from '../../application/ports/car-repository';
 import { Schema, connect, model } from 'mongoose';
 import { v4 as uuidv4 } from 'uuid';
 import GetAllCarsDto from '../../application/dtos/get-all-cars.dto';
+import { PaginatedResponse } from '../../commons/models/paginated-response';
 
 const carSchema = new Schema<Car>({
   id: { type: String, required: true },
@@ -22,7 +23,7 @@ export default class CarRepositoryDynamoDB implements CarRepository {
     }
   }
 
-  getAllCars(params?: GetAllCarsDto): Promise<Car[]> {
+  async getAllCars(params?: GetAllCarsDto): Promise<PaginatedResponse<Car>> {
     const query: any = {};
 
     if (params?.search) {
@@ -35,7 +36,21 @@ export default class CarRepositoryDynamoDB implements CarRepository {
       ];
     }
 
-    return CarModel.find(query).exec();
+    const page = params?.page ?? 1;
+    const limit = params?.limit ?? 10;
+
+    const total = await CarModel.countDocuments(query).exec();
+    const data = await CarModel.find(query)
+      .skip((page - 1) * limit)
+      .limit(limit)
+      .exec();
+
+    return {
+      data,
+      total,
+      page,
+      limit,
+    };
   }
 
   getCarById(id: string): Promise<Car | null> {

@@ -9,10 +9,14 @@ class GetAllCarsHandler {
   constructor(private readonly getAllCarUseCase: GetAllCarUseCase) {}
 
   async handle(params?: GetAllCarsDto): Promise<APIGatewayProxyResultV2> {
-    const cars = await this.getAllCarUseCase.excecute(params);
+    const data = await this.getAllCarUseCase.excecute({
+      search: params?.search,
+      limit: params?.limit,
+      page: params?.page,
+    });
     const response = {
       statusCode: 200,
-      body: JSON.stringify(cars),
+      body: JSON.stringify(data),
     };
 
     return response;
