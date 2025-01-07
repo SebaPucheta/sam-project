@@ -32,14 +32,11 @@ class CarRepositoryDynamoDB {
         }
         const page = params?.page ?? 1;
         const limit = params?.limit ?? 10;
-        console.log('page', page, 'limit', limit);
         const total = await CarModel.countDocuments(query).exec();
         const data = await CarModel.find(query)
             .skip((page - 1) * limit)
             .limit(limit)
             .exec();
-        console.log('total', total);
-        console.log('data', data);
         return {
             data,
             total,
