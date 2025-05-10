@@ -18,6 +18,51 @@ Resources:
         ReadCapacityUnits: 1
         WriteCapacityUnits: 1
 
+  # Cognito User Pool
+  MyUserPool:
+    Type: AWS::Cognito::UserPool
+    Properties:
+      UserPoolName: angular-19-project
+      Policies:
+        PasswordPolicy:
+          MinimumLength: 8
+          RequireUppercase: true
+          RequireLowercase: true
+          RequireNumbers: true
+          RequireSymbols: true
+      UserPoolAddOns:
+        AdvancedSecurityMode: 'OFF'
+      Schema:
+        - Name: email
+          AttributeDataType: String
+          Required: true
+          Mutable: true
+      AutoVerifiedAttributes:
+        - email
+      AccountRecoverySetting:
+        RecoveryMechanisms:
+          - Name: verified_email
+            Priority: 1
+
+  # Cognito User Pool Client
+  MyUserPoolClient:
+    Type: AWS::Cognito::UserPoolClient
+    Properties:
+      UserPoolId: !Ref MyUserPool
+      ClientName: MyUserPoolClient
+      GenerateSecret: false
+      AllowedOAuthFlows:
+        - code
+        - implicit
+      AllowedOAuthScopes:
+        - email
+        - openid
+        - profile
+      CallbackURLs:
+        - "https://example.com/callback"
+      LogoutURLs:
+        - "https://example.com/logout"
+
   # Secret
   MySecret:
     Type: AWS::SecretsManager::Secret
@@ -28,27 +73,27 @@ Resources:
         {
           "USERS_TABLE_NAME": "Users"
         }
-  MyAuthorizerFunction:
-    Type: AWS::Serverless::Function
-    Properties: 
-      Handler: build/infrastructure/handlers/auth/authorizer.handler
-      Runtime: nodejs20.x
-      CodeUri: ./
-      MemorySize: 128
-      Timeout: 100
-      Description: Lambda function that acts as an authorizer for API Gateway
-      Policies:
-        - AWSLambdaBasicExecutionRole
-        - Statement:
-          - Effect: Allow
-            Action:
-            - secretsmanager:GetSecretValue
-            Resource: !Ref MySecret
-      Environment:
-        Variables:
-          SECRET_NAME: !Ref MySecret
-          NODE_ENV: ""
-          AUTH_PRIVATE_KEY: ""
+  #MyAuthorizerFunction:
+  #  Type: AWS::Serverless::Function
+  #  Properties: 
+  #    Handler: build/infrastructure/handlers/auth/authorizer.handler
+  #    Runtime: nodejs20.x
+  #    CodeUri: ./
+  #    MemorySize: 128
+  #    Timeout: 100
+  #    Description: Lambda function that acts as an authorizer for API Gateway
+  #    Policies:
+  #      - AWSLambdaBasicExecutionRole
+  #      - Statement:
+  #        - Effect: Allow
+  #          Action:
+  #          - secretsmanager:GetSecretValue
+  #          Resource: !Ref MySecret
+  #    Environment:
+  #      Variables:
+  #        SECRET_NAME: !Ref MySecret
+  #        NODE_ENV: ""
+  #        AUTH_PRIVATE_KEY: ""
 
   # API Gateway
   MyApi:
@@ -57,14 +102,13 @@ Resources:
       StageName: Prod
       Auth:
         Authorizers:
-          MyCustomAuthorizer:
-            FunctionArn: !GetAtt MyAuthorizerFunction.Arn
-            Identity: 
-              Headers:
-                - Authorization
-              ReauthorizeEvery: 0
-            FunctionPayloadType: REQUEST
-            EnableSimpleResponses: true
+          CognitoAuthorizer:
+            UserPoolArn: !GetAtt MyUserPool.Arn
+            IdentitySource: method.request.header.Authorization
+      Cors:
+        AllowMethods: "'GET,POST,PUT,PATCH,DELETE,OPTIONS'"
+        AllowHeaders: "'Content-Type,Authorization,Access-Control-Allow-Origin'"
+        AllowOrigin: "'*'"
 
   # This is a monolithic function
   samProjectFunction:
@@ -91,9 +135,7 @@ Resources:
         Variables:
           SECRET_NAME: !Ref MySecret
           NODE_ENV: ""
-          USERS_TABLE_NAME: ""
           MONGODB_CONNECTION_STRING: ""
-          AUTH_PRIVATE_KEY: ""
       Events:
         GetAllCars:
           Type: Api
@@ -102,7 +144,7 @@ Resources:
             Path: /cars
             Method: GET
             Auth:
-              Authorizer: MyCustomAuthorizer
+              Authorizer: CognitoAuthorizer
         GetCarById:
           Type: Api
           Properties:
@@ -110,7 +152,7 @@ Resources:
             Path: /cars/{id}
             Method: GET
             Auth:
-              Authorizer: MyCustomAuthorizer
+              Authorizer: CognitoAuthorizer
         PostCars:
           Type: Api
           Properties:
@@ -118,23 +160,36 @@ Resources:
             Path: /cars
             Method: POST
             Auth:
-              Authorizer: MyCustomAuthorizer
-        SignUp:
+              Authorizer: CognitoAuthorizer
+        UpdateCar:
           Type: Api
           Properties:
             RestApiId: !Ref MyApi
-            Path: /sign-up
-            Method: POST
+            Path: /cars/{id}
+            Method: PUT
             Auth:
-              Authorizer: NONE
-        Login:
+              Authorizer: CognitoAuthorizer
+        DeleteCar:
           Type: Api
           Properties:
             RestApiId: !Ref MyApi
-            Path: /login
-            Method: POST
+            Path: /cars/{id}
+            Method: DELETE
             Auth:
-              Authorizer: NONE
+              Authorizer: CognitoAuthorizer
+      
+      #  SignUp:
+      #    Type: Api
+      #    Properties:
+      #      RestApiId: !Ref MyApi
+      #      Path: /sign-up
+      #      Method: POST
+      #  Login:
+      #    Type: Api
+      #    Properties:
+      #      RestApiId: !Ref MyApi
+      #      Path: /login
+      #      Method: POST
 
   ApplicationResourceGroup:
     Type: AWS::ResourceGroups::Group

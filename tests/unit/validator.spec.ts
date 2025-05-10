@@ -1,4 +1,3 @@
-
 import { applyRequiredProperties, validate } from "../../src/commons/validation-utils";
 import { carSchema, joiCarSchema } from "../../src/infrastructure/handlers/cars/schemas/post-car-body";
 

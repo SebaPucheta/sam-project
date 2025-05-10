@@ -3,6 +3,7 @@ import httpHeaderNormalizer from '@middy/http-header-normalizer';
 import httpUrlEncodePathParser from '@middy/http-urlencode-path-parser';
 import httpJsonBodyParser from '@middy/http-json-body-parser';
 import { httpErrorMiddleware } from './http-error.middleware';
+import { afterMiddleware } from './after.middleware';
 
 export class MiddyLambdaBuilder {
   protected middlewares: any[] = [];
@@ -11,6 +12,7 @@ export class MiddyLambdaBuilder {
   private commonEndpointMiddlewares = [
     httpHeaderNormalizer(),
     httpErrorMiddleware(),
+    afterMiddleware(),
   ];
 
   constructor(private readonly handler: any) {}

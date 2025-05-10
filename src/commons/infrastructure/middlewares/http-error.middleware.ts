@@ -1,13 +1,9 @@
 import { normalizeHttpResponse } from '@middy/util';
 import { MiddlewareObj } from '@middy/core';
+import { CORS_HEADERS } from '../../constants/constants';
 
 const defaults = {
   fallbackMessage: null,
-};
-
-const CORS_HEADERS = {
-  'Access-Control-Allow-Origin': '*',
-  'Access-Control-Allow-Credentials': true,
 };
 
 export const httpErrorMiddleware = (opts = {}): MiddlewareObj => {
@@ -53,7 +49,6 @@ export const httpErrorMiddleware = (opts = {}): MiddlewareObj => {
         headers: {
           ...headers,
           ...request.response.headers,
-          'Content-Type': 'application/json',
           ...CORS_HEADERS,
         },
       };

@@ -9,17 +9,21 @@ jobs:
   install_dependencies:
     runs-on: ubuntu-latest
     steps:
+      # Allow you to have access to the code
       - name: Checkout code
         uses: actions/checkout@v2
 
+      # Install node
       - name: Set up Node.js
         uses: actions/setup-node@v2
         with:
           node-version: '16'
 
+      # Install dependencies
       - name: Install dependencies
         run: npm install
 
+      # Save the node_modules files
       - name: Cache node_modules
         uses: actions/cache@v2
         with:
@@ -40,11 +44,21 @@ jobs:
         with:
           node-version: '16'
 
+      # Restore the node_modules files
+      - name: Restore node_modules cache
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
+
       - name: Run tests
         run: npm test
 
   deploy:
     runs-on: ubuntu-latest
+    environment: development
     needs: unit_test
     if: startsWith(github.ref, 'refs/heads/integration')
     steps:
@@ -55,13 +69,21 @@ jobs:
         uses: actions/setup-node@v2
         with:
           node-version: '16'
-
+      # Allow me to set my AWS credentials
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v1
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
           aws-region: us-east-1
+
+      - name: Restore node_modules cache
+        uses: actions/cache@v2
+        with:
+          path: node_modules
+          key: ${{ runner.os }}-node_modules-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node_modules-
 
       - name: Build project
         run: npm run build

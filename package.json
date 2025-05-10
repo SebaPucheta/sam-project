@@ -46,6 +46,7 @@
     "test": "node --experimental-vm-modules ./node_modules/jest/bin/jest.js",
     "build": "tsc",
     "lint": "eslint 'src/**/*.{ts,tsx}' --fix",
-    "start:local:start-api": "npm run build && sam build && sam local start-api --env-vars locals.json"
+    "start:local:start-api": "npm run build && sam build && sam local start-api --env-vars locals.json",
+    "deploy": "npm run build && sam build && sam deploy --capabilities CAPABILITY_IAM --no-confirm-changeset --no-fail-on-empty-changeset"
   }
 }
